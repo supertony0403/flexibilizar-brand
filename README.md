@@ -32,7 +32,7 @@ $BL banner /mnt/steam-library/flexibilizar/arbeit/banner_roh.png --samples 96
 .venv/bin/python -m marke.banner
 python3 ton/erzeugen.py                 # Schlüssel aus ~/.config/elevenlabs.env, kostet Credits
 .venv/bin/python ton/mischen.py /mnt/steam-library/flexibilizar/arbeit/ton/intro_ton.wav
-$BL intro /mnt/steam-library/flexibilizar/arbeit/frames --samples 48
+$BL intro /mnt/steam-library/flexibilizar/arbeit/frames --samples 32
 .venv/bin/python -m blender.zusammenbau
 ```
 
