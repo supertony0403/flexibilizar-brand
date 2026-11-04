@@ -14,12 +14,6 @@ ZIEL = Path("/mnt/steam-library/flexibilizar/arbeit/ton")
 API = "https://api.elevenlabs.io/v1"
 
 MUSIK = {
-    "stinger_a": (
-        "Short documentary channel ident, 7 seconds. Dry, close and serious, no vocals. A nervous muted "
-        "pizzicato and felt-piano ostinato for 2 seconds, three rising low soft impacts, then one warm "
-        "resolved low piano and cello chord that rings out and decays to silence. Understated, no epic trailer "
-        "brass, no synth risers, neutral in mood, neither happy nor threatening."
-    ),
     "stinger_b": (
         "Very short elegant documentary logo sting, 7 seconds, instrumental. Upright bass pulse and prepared "
         "piano ticking like a machine, tightening for 3 seconds, landing on a single open warm chord of felt "
@@ -30,17 +24,16 @@ EFFEKTE = {
     "feder": ("Fast chart recorder pen scratching on a running paper strip with quiet paper feed motor, dry close microphone, no music", 2.0),
     "falz": ("One single crisp fold of thick paper being creased flat with a soft snap, close microphone, dry room, no reverb", 1.0),
     "taste": ("Single vintage mechanical typewriter key strike, one short clack, dry close microphone", 0.6),
-    "tippen": ("Vintage mechanical typewriter typing twelve quick evenly spaced keystrokes then stop, dry close microphone", 2.0),
 }
 
 
 def schluessel() -> str:
     text = (Path.home() / ".config/elevenlabs.env").read_text()
-    return re.search(r"ELEVEN\w*KEY\w*\s*=\s*[\"']?([^\s\"']+)", text).group(1)
+    return re.search(r"^\s*(?:export\s+)?ELEVEN\w*KEY\w*\s*=\s*[\"']?([^\s\"']+)", text, re.M).group(1)
 
 
 def post(pfad: str, daten: dict, ziel: Path) -> None:
-    if ziel.exists():
+    if ziel.exists() and ziel.stat().st_size > 0:
         print("vorhanden:", ziel.name)
         return
     anfrage = urllib.request.Request(
@@ -50,7 +43,11 @@ def post(pfad: str, daten: dict, ziel: Path) -> None:
     )
     try:
         with urllib.request.urlopen(anfrage, timeout=240) as a:
-            ziel.write_bytes(a.read())
+            daten_aus = a.read()
+        if not daten_aus:
+            print("FEHLER", ziel.name, "leere Antwort")
+            return
+        ziel.write_bytes(daten_aus)
         print("geladen:", ziel.name, ziel.stat().st_size // 1024, "KB")
     except urllib.error.HTTPError as e:
         # The status line only: an error body could echo request details.

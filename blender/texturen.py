@@ -14,7 +14,6 @@ from marke.spur import spur
 ARBEIT = AUSGABE / "arbeit"
 PAPIER = np.array((236, 227, 208), float)
 RASTER = (176, 150, 112)
-TINTE = (30, 26, 22)
 
 
 def faser(h: int, b: int, saat: int, staerke: float) -> np.ndarray:
@@ -84,7 +83,6 @@ def wortmarke_bild(b: int, h: int, text: str = "FLEXIBILIZAR") -> tuple[Image.Im
     bild = Image.new("L", (b, h), 0)
     z = ImageDraw.Draw(bild)
     links, oben, rechts, unten = z.textbbox((0, 0), text, font=f)
-    x = 0.0
     skala = 1.0
     if rechts - links > b:
         skala = b / (rechts - links)

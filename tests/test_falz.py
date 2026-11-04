@@ -49,8 +49,26 @@ def test_kopf_ist_um_45_grad_gefalzt():
     assert np.any(np.all(np.isclose(p, (0, M.hoehe - 1)), axis=1))
 
 
-def test_seiten_wechseln_mit_jedem_falz():
-    assert [l["seite"] for l in lagen(M)] == ["vorn", "hinten", "vorn", "hinten"]
+def _flaeche(p):
+    x, y = p[:, 0], p[:, 1]
+    return 0.5 * np.sum(x * np.roll(y, -1) - np.roll(x, -1) * y)
+
+
+def test_seiten_stimmen_mit_der_geometrie_ueberein():
+    """A panel showing its reverse is mirrored, so folding must flip its orientation in the plane."""
+    punkte = {
+        "arm_oben": (2.0, 2.5, 3.0),
+        "stiel": (-1.0, -1.5, -2.0),
+        "lasche": (falze(M)[1].punkt[0] - 0.2, falze(M)[1].punkt[0] - 0.4, falze(M)[1].punkt[0] - 0.6),
+        "arm_mitte": (falze(M)[2].punkt[0] - 1.2, falze(M)[2].punkt[0] - 1.4, falze(M)[2].punkt[0] - 1.6),
+    }
+    for lage in lagen(M):
+        xs = punkte[lage["name"]]
+        y = M.hoehe - 1
+        flach = np.array([(xs[0], y + 0.4), (xs[1], y + 0.4), (xs[2], y + 0.8)])
+        zu = falten(flach, M, (np.pi, np.pi, np.pi))[:, :2]
+        gespiegelt = np.sign(_flaeche(flach)) != np.sign(_flaeche(zu))
+        assert gespiegelt == (lage["seite"] == "hinten"), lage["name"]
 
 
 def test_flacher_streifen_wird_nicht_bewegt():
@@ -58,12 +76,37 @@ def test_flacher_streifen_wird_nicht_bewegt():
     assert falten(e, M, (0, 0, 0))[:, :2] == pytest.approx(e)
 
 
-def test_papierlaenge_bleibt_beim_falten_erhalten():
-    """A rigid fold cannot stretch paper: distances inside one panel stay exact."""
-    links = 1 + M.arm_oben - laenge_gesamt(M)
-    a, b = np.array([[links, M.hoehe - 1]]), np.array([[links + 0.5, M.hoehe - 1]])
-    pa, pb = falten(a, M, (2.0, 1.0, 0.7)), falten(b, M, (2.0, 1.0, 0.7))
-    assert np.linalg.norm(pa - pb) == pytest.approx(0.5)
+@pytest.mark.parametrize("winkel", [(2.0, 1.0, 0.7), (np.pi, np.pi, np.pi), (0.4, 2.9, 1.5)])
+def test_falten_dehnt_das_papier_nicht(winkel):
+    """Rigid folds keep the distance from any point to its crease, across every fold in the chain."""
+    h = M.hoehe
+    f1, f2, f3 = falze(M)
+    weg = np.array([[f3.punkt[0] - 2.0, h - 0.5]])
+    # Length of the path paper -> crease 3 -> crease 2 -> crease 1, measured flat and folded.
+    knoten = [f1.punkt + f1.richtung * 0.5 * np.sqrt(2), f2.punkt + f2.richtung * -0.5, f3.punkt + f3.richtung * 0.5 * np.sqrt(2)]
+    kette = np.vstack([weg, knoten[2], knoten[1], knoten[0]])
+    flach = np.linalg.norm(np.diff(np.c_[kette, np.zeros(4)], axis=0), axis=1)
+    zu = np.linalg.norm(np.diff(falten(kette, M, winkel, lage=0.0), axis=0), axis=1)
+    assert zu == pytest.approx(flach, abs=1e-9)
+
+
+def test_kleiner_radius_landet_auf_dem_scharfen_falz():
+    """The render presses folds to a tiny radius, outside the band it must match the sharp fold."""
+    x, v = gitter(M, 40)
+    y = M.hoehe - 1 + v
+    p = np.c_[x.ravel(), y.ravel()]
+    scharf = falten(p, M, (np.pi, np.pi, np.pi))
+    rund = falten(p, M, (np.pi, np.pi, np.pi), radius=0.012)
+    abstand = np.min([np.abs((p - f.punkt) @ f.normale) for f in falze(M)], axis=0)
+    assert rund[abstand > 0.012][:, :2] == pytest.approx(scharf[abstand > 0.012][:, :2])
+
+
+def test_zeitplan_landet_im_takt_und_vor_dem_ausblenden():
+    from marke.zeitplan import AUS_START, DAUER, LANDUNG, TASTEN
+
+    assert np.diff(LANDUNG) == pytest.approx([0.4286, 0.4286], abs=0.01)
+    assert LANDUNG[-1] < TASTEN[0] < TASTEN[-1] < AUS_START < DAUER
+    assert 4 <= DAUER <= 6
 
 
 def test_lagen_liegen_uebereinander_nicht_ineinander():

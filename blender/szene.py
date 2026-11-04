@@ -20,10 +20,10 @@ REPO = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO))
 from marke.falz import BANNER, Masse, falten, gitter, laenge_gesamt  # noqa: E402
 from marke.spur import spur  # noqa: E402
+from marke.zeitplan import BILDER as LETZTES_BILD  # noqa: E402
+from marke.zeitplan import FENSTER, FPS, SCHREIB_JE, SCHREIB_START  # noqa: E402
 
 ARBEIT = Path("/mnt/steam-library/flexibilizar/arbeit")
-FPS = 24
-LETZTES_BILD = 132
 SHUTTER = 0.5  # 180-degree shutter, in frames
 
 M = Masse()
@@ -47,12 +47,6 @@ def schnapp(a: float, b: float, x: float) -> float:
     """Fold motion: a slow lift, a fast slap, pressed flat at the end."""
     t = max(0.0, min(1.0, (x - a) / (b - a)))
     return t**2.6 * (3 - 2 * t)
-
-
-# Fold windows in frames. Overlap a little, so each fold lifts while the previous one lands.
-# The landings sit on the stinger's beat (2.021, 2.449 and 2.878 s), keep ton/mischen.py in step.
-FENSTER = ((36.0, 49.5), (46.5, 59.78), (56.5, 70.08))
-SCHREIB_START, SCHREIB_JE = 72, 2
 
 
 def falzwinkel(f: float) -> tuple[float, float, float]:
@@ -502,9 +496,8 @@ def intro(args: argparse.Namespace) -> None:
             p = falten(flach, M, falzwinkel(t), falzradius(t), LAGE)
             p[:, 0] += vorschub(t)
             key.data.foreach_set("co", p.ravel())
-        for key, von_w, bis_w in ((k_a, 1.0, 0.0), (k_b, 0.0, 1.0)):
-            if me.shape_keys.animation_data:
-                me.shape_keys.animation_data_clear()
+        if me.shape_keys.animation_data:
+            me.shape_keys.animation_data_clear()
         for key, von_w, bis_w in ((k_a, 1.0, 0.0), (k_b, 0.0, 1.0)):
             key.value = von_w
             key.keyframe_insert("value", frame=f - SHUTTER / 2)

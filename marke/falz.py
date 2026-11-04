@@ -104,7 +104,9 @@ def falten_kette(
     """Fold flat points (N, 2 or 3) along a chain of creases, angles in radians (pi = closed).
 
     `radius` rounds a crease: the angle ramps up over a band of that width, so paper bends
-    instead of breaking at a hinge. `lage` is the layer thickness, keeping stacked layers apart.
+    instead of breaking at a hinge. Inside that band the sheet is only approximately isometric
+    (it compresses while bending), so close to landing the radius must shrink to almost nothing.
+    `lage` is the layer thickness, keeping stacked layers apart.
     Creases are applied from the far end inward: a later crease only moves points beyond it, and
     those creases still lie in the flat plane at that moment, so the composition is exact.
     """

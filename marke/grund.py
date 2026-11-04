@@ -11,14 +11,13 @@ from fontTools.varLib import instancer
 from PIL import ImageFont
 
 AUSGABE = Path("/mnt/steam-library/flexibilizar")
-SCHRIFTEN = Path("/mnt/steam-library/marek-doku/schriften")
+SCHRIFTEN = AUSGABE / "schriften"
 
 TINTE = "#1e1a16"  # warm near-black, the film's ink
 ELFENBEIN = "#eee6d6"
 ELFENBEIN_SCHATTEN = "#c9bfaa"
 MARKER = "#f7d63e"
 MARKER_SCHATTEN = "#c9a91e"
-TISCH = "#17140f"
 
 
 @lru_cache

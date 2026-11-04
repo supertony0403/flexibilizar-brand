@@ -36,4 +36,6 @@ $BL intro /mnt/steam-library/flexibilizar/arbeit/frames --samples 32
 .venv/bin/python -m blender.zusammenbau
 ```
 
-Schriften: Archivo und Courier Prime (OFL), aus `/mnt/steam-library/marek-doku/schriften/`.
+Schriften: Archivo und Courier Prime (OFL), unter `/mnt/steam-library/flexibilizar/schriften/`.
+
+`szene.py intro` überspringt vorhandene Bilder, damit ein Abbruch nichts kostet. Wer Zeitplan, Kamera oder Licht ändert, rendert mit `--neu`.
