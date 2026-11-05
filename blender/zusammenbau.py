@@ -7,6 +7,7 @@ from __future__ import annotations
 import json
 import re
 import subprocess
+import tempfile
 from pathlib import Path
 
 from marke.grund import AUSGABE
@@ -18,7 +19,7 @@ ZIEL = AUSGABE / "intro"
 TON = ARBEIT / "ton" / "intro_ton.wav"
 # Grain goes in before the fades, otherwise the black end would carry noise.
 FILTER = (
-    "vignette=PI/5.5,noise=alls=5:allf=t,"
+    "vignette=PI/10,noise=alls=3:allf=t,"
     f"fade=t=in:st=0:d=0.125,fade=t=out:st={AUS_START}:d={AUS_ENDE - AUS_START:.3f},"
     "scale=out_color_matrix=bt709:out_range=tv,format={fmt}"
 )
@@ -86,8 +87,11 @@ def pruefen(datei: Path) -> None:
 
 
 def bogen() -> None:
-    wahl = list(range(3, BILDER + 1, 5))
-    kontaktbogen([ARBEIT / "frames" / f"f{i:04d}.png" for i in wahl], ZIEL / "kontaktbogen.png", spalten=6, breite=400)
+    """Contact sheet from the finished mp4, not the raw frames: it must show the fades and the grain."""
+    with tempfile.TemporaryDirectory(dir=ARBEIT) as tmp:
+        ffmpeg("-i", str(ZIEL / "intro.mp4"), "-start_number", "1", str(Path(tmp) / "f%04d.png"))
+        wahl = [*range(3, BILDER + 1, 5), BILDER]
+        kontaktbogen([Path(tmp) / f"f{i:04d}.png" for i in wahl], ZIEL / "kontaktbogen.png", spalten=6, breite=400)
 
 
 def main() -> None:
